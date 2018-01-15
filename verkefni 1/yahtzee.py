@@ -5,7 +5,6 @@ import pygame as pg
 from random import randint
 from rounded import rounded_rect
 from text import text_to_screen
-import os
 
 """
 5 teningar, 2 uppi, 3 niðri
