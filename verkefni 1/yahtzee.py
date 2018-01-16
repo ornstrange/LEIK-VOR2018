@@ -99,19 +99,14 @@ class Die:
         mouse_y = pg.mouse.get_pos()[1]
         return (self.x <= mouse_x <= self.x + self.size) and (self.y <= mouse_y <= self.y + self.size)
 
-    def mouse(self):
-        m_click = pg.mouse.get_pressed()[0]
-        if self.contains():
-            if m_click and not self.clicked:
-                self.marked = True if not self.marked else False
-            elif self.clicked:
-                self.clicked = False
 
 class Grid:
     def __init__(self):
         self.dice = [[Die(0, 0), Die(0, 1), Die(0, 2, True)], [Die(1, 0), Die(1, 1), Die(1, 2)]]
         self.buttons = [Button(20, 300, 210, 40, (240, 180, 180), "END TURN", self.roll_all),
                         Button(250, 300, 210, 40, (180, 240, 180), "ROLL AGAIN", self.roll_all)]
+
+        self.roll_count = -1
 
     def show_all(self):
         for i in range(2):
@@ -120,16 +115,35 @@ class Grid:
             self.buttons[i].show()
 
     def roll_all(self):
+
+        self.roll_count += 1
+
+        if self.roll_count == 2:
+            self.roll_count = 0
+            self.unmark_all()
+            self.print_result()
+
         for i in range(2):
             for j in range(3):
                 if not self.dice[i][j].marked:
                     self.dice[i][j].roll()
 
-    def mouse_events(self):
+    def unmark_all(self):
         for i in range(2):
             for j in range(3):
-                self.dice[i][j].mouse()
-            self.buttons[i].mouse()
+                self.dice[i][j].marked = False
+
+    def print_result(self):
+        c = 0
+
+        print("-*-" * 10)
+
+        for i in range(2):
+            for j in range(3):
+                c += 1
+                print("Dice %d had the value: %d" % (c, self.dice[i][j].value))
+
+        print("-*-" * 10)
 
 
 class Button:
@@ -153,11 +167,6 @@ class Button:
         mouse_y = pg.mouse.get_pos()[1]
         return (self.x <= mouse_x <= self.x + self.w) and (self.y <= mouse_y <= self.y + self.h)
 
-    def mouse(self):
-        if self.contains():
-            if pg.mouse.get_pressed()[0]:
-                self.func()
-
 
 grid = Grid()
 
@@ -171,7 +180,20 @@ while game:
             game = False
 
     grid.show_all()
-    grid.mouse_events()
+
+    for event in pg.event.get(pg.MOUSEBUTTONUP):
+        for i in range(2):
+            for j in range(3):
+                if grid.dice[i][j].contains():
+                    grid.dice[i][j].marked = True if not grid.dice[i][j].marked else False
+            if grid.buttons[i].contains():
+                if grid.buttons[i].name == "END TURN":
+                    grid.unmark_all()
+                    grid.print_result()
+                    grid.roll_all()
+                    grid.roll_count = 0
+                elif grid.buttons[i].name == "ROLL AGAIN":
+                    grid.roll_all()
 
     pg.display.flip()
     pg.display.update()
