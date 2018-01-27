@@ -1,7 +1,8 @@
 # maze generator for maze game
 # örn óli strange
-from random import choice, randint
+from random import choice, randint, randrange
 
+destroy_some_walls = True
 
 def make_2d_array(rows, columns=False):
     # 2d array function
@@ -67,6 +68,13 @@ def generate_maze(size):
 
     # enter
     maze_array[0][1][0] = False
+
+    if destroy_some_walls:
+        for i in range(1, maze_count-3):
+            if randint(0, 3) > 0:
+                maze_array[i][randrange(1, maze_count-2, 2)][0] = False
+                maze_array[i][randrange(1, maze_count-2, 2)][0] = False
+                maze_array[i][randrange(1, maze_count - 2, 2)][0] = False
 
     # return maze
     final_maze_list = []
