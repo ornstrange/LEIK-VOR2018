@@ -2,7 +2,7 @@
 # 19.01.2018
 
 import pygame as pg
-from random import randint, randrange, choice
+from random import randint, randrange, choice, shuffle
 from text import text_to_screen
 from maze_generator import generate_maze
 
@@ -41,14 +41,14 @@ WALL_COLOR = (120, 120, 120)
 PLAYER_COLOR = (240, 240, 240)
 BOMB_COLOR = (200, 60, 60)
 DEFUSER_COLOR = (60, 200, 60)
-KEY_COLOR = (60, 200, 200)
+KEY_COLOR = (200, 200, 60)
 CHEST_COLOR = (200, 120, 60)
 EXIT_OPEN = BACKGROUND_COLOR
 EXIT_CLOSED = WALL_COLOR
 
 
 class Item:
-    def __init__(self, i, j, t):
+    def __init__(self, i, j, t, c):
         self.i = i
         self.j = j
         self.size = TILE_S
@@ -56,26 +56,56 @@ class Item:
         self.y = i * self.size
         self.rectangle = pg.Rect(self.x+2, self.y+2, self.size-4, self.size-4)
 
-        self.color = PLAYER_COLOR
-
-        self.t = t
+        self.type = t
+        self.color = c
 
     def show(self):
+        if self.type in ["BOMB", "DEFUSER"]:
+            bd_rect = self.rectangle.inflate(-4, -4)
+            pg.draw.ellipse(screen, self.color, bd_rect)
+        elif self.type == "CHEST":
+            pg.draw.rect(screen, self.color, self.rectangle)
+        else:
+            key_rect = self.rectangle.inflate(-8, -8)
+            pg.draw.rect(screen, self.color, key_rect)
+
 
 class Game:
     def __init__(self):
         self.score = 0
 
-        self.grid = Grid()
-        self.setup_grid()
-
-        self.items = Items()
+        self.colors = {"BOMB": BOMB_COLOR,
+                       "DEFUSER": DEFUSER_COLOR,
+                       "KEY": KEY_COLOR,
+                       "CHEST": CHEST_COLOR}
+        self.items = []
 
         self.player = Player(0, 1)
+
+        self.grid = Grid()
+        self.setup_grid()
 
     def setup_grid(self):
         self.grid.fill_grid(generate_maze(TILE_C))
         self.grid.random_exit()
+        self.add_items()
+
+    def add_items(self):
+        corners = self.grid.find_corners()
+        shuffle(corners)
+        if len(corners) >= 7:
+            for i, j in enumerate(corners):
+                if i < 3:
+                    self.items.append(Item(j[0], j[1], "KEY", self.colors["KEY"]))
+                elif i < 6:
+                    self.items.append(Item(j[0], j[1], "CHEST", self.colors["CHEST"]))
+                elif i == 6:
+                    self.items.append(Item(j[0], j[1], "DEFUSER", self.colors["DEFUSER"]))
+                else:
+                    break
+            self.items.append(Item(self.grid.exit[1], self.grid.exit[0], "BOMB", self.colors["BOMB"]))
+        else:
+            self.reset_game()
 
     def can_player_move(self, direction):
         i = self.player.i
@@ -93,7 +123,13 @@ class Game:
 
     def show_all(self):
         self.grid.show()
+        for i in self.items:
+            i.show()
+
         self.player.show()
+
+    def reset_game(self):
+        self.__init__()
 
 
 class Cell:
@@ -118,6 +154,7 @@ class Cell:
 class Grid:
     def __init__(self):
         self.cells = [["" for j in range(TILE_C)] for i in range(TILE_C)]
+        self.exit = (randrange(1, TILE_C, 2), TILE_C-1)
 
     def show(self):
         for cell_row in self.cells:
@@ -130,10 +167,19 @@ class Grid:
                 self.cells[cell_row][cell] = Cell(cell_row, cell, arr[cell_row][cell])
 
     def random_exit(self):
-        index = randrange(1, TILE_C, 2)
+        index = self.exit[0]
         self.cells[-1][index].wall = False
         self.cells[-1][index].exit = True
         self.cells[-1][index].color = EXIT_OPEN
+
+    def find_corners(self):
+        corners = []
+        for cr in range(1, len(self.cells), 2):
+            for c in range(1, len(self.cells[cr]), 2):
+                if sum([self.cells[cr+1][c].wall, self.cells[cr-1][c].wall,
+                        self.cells[cr][c+1].wall, self.cells[cr][c-1].wall]) == 3:
+                    corners.append((cr, c))
+        return corners
 
 
 class Player:

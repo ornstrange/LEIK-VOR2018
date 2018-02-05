@@ -5,7 +5,7 @@
       <sourceFolder url="file://$MODULE_DIR$/verkefni 1" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Verkefni 2" isTestSource="false" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.6.0 virtualenv at C:\Users\Lenovo\gameVenv" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.6 (gameVenv)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="TestRunnerService">
