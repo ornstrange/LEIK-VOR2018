@@ -5,6 +5,7 @@ import pygame as pg
 from random import randint, randrange, choice, shuffle
 from text import text_to_screen
 from maze_generator import generate_maze
+import sys
 
 """
 Cell: i, j, x, y, wall?, show, exit?
@@ -29,8 +30,8 @@ key: yellow keyshape
 exit: wall color closed, background color open
 """
 
-# SETTINGS
-TILE_S = 24
+# SETTINGSa
+TILE_S = 22
 TILE_C = 31
 SCREEN_W, SCREEN_H = TILE_S*TILE_C, TILE_S*TILE_C
 FPS = 120
@@ -71,8 +72,8 @@ class Item:
 
 
 class Game:
-    def __init__(self):
-        self.score = 0
+    def __init__(self, s=0):
+        self.score = s
 
         self.colors = {"BOMB": BOMB_COLOR,
                        "DEFUSER": DEFUSER_COLOR,
@@ -121,6 +122,36 @@ class Game:
             return (j != TILE_C-1) and (not cells[i][j+1].wall)
         return False
 
+    def item_collision(self):
+        pli = self.player.i
+        plj = self.player.j
+        for item in self.items:
+            if (pli, plj) == (item.i, item.j):
+                if item.type == "KEY":
+                    self.player.key_count += 1
+                    self.score += 25
+                    self.items.remove(item)
+                elif item.type == "CHEST":
+                    if self.player.key_count > 0:
+                        self.player.key_count -= 1
+                        self.score += 100
+                        self.items.remove(item)
+                    else:
+                        break
+                elif item.type == "DEFUSER":
+                    self.player.has_defuser = True
+                    self.score += 50
+                    self.items.remove(item)
+                else:
+                    if self.player.has_defuser:
+                        self.player.has_defuser = False
+                        self.score += 300
+                        self.items.remove(item)
+                        self.reset_game(self.score)
+                    else:
+                        break
+                text_stuff()
+
     def show_all(self):
         self.grid.show()
         for i in self.items:
@@ -128,8 +159,8 @@ class Game:
 
         self.player.show()
 
-    def reset_game(self):
-        self.__init__()
+    def reset_game(self, s=0):
+        self.__init__(s)
 
 
 class Cell:
@@ -192,6 +223,9 @@ class Player:
         self.rectangle = pg.Rect(self.x+2, self.y+2, self.size-4, self.size-4)
 
         self.color = PLAYER_COLOR
+        self.key_count = 0
+
+        self.has_defuser = False
 
     def show(self):
         pg.draw.ellipse(screen, self.color, self.rectangle)
@@ -226,7 +260,17 @@ screen = pg.display.set_mode((SCREEN_W, SCREEN_H))
 game = Game()
 grid = game.grid
 
+def text_stuff():
+    print("*" * 25)
+    print("SCORE: %d" % game.score)
+    print("KEYS: %d" % game.player.key_count)
+    print("PLAYER HAS DEFUSER" if game.player.has_defuser else "PLAYER DOESN'T HAVE DEFUSER")
+    print("*" * 25)
+
+text_stuff()
+
 while game_loop:
+    gscore = game.score
     screen.fill(BACKGROUND_COLOR)
     clock.tick(FPS)
 
@@ -249,6 +293,7 @@ while game_loop:
 
     # GRID
     game.show_all()
+    game.item_collision()
 
     # DISPLAY
     pg.display.flip()
