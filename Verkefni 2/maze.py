@@ -120,7 +120,7 @@ class Game:
             return (j != 0) and (not cells[i][j-1].wall)
         elif direction == "R":
             return (j != TILE_C-1) and (not cells[i][j+1].wall)
-        return False
+        return Falsec
 
     def item_collision(self):
         pli = self.player.i
