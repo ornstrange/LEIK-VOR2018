@@ -1,10 +1,10 @@
+# -*- coding: utf-8 -*-
 # Örn Ól Strange
 # 28.02.2018
 
 import pygame as pg
 from random import randint, randrange, choice, shuffle
 from text import text_to_screen
-from maze_generator import generate_maze
 import sys
 
 """
