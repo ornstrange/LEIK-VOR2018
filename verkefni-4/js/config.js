@@ -1,0 +1,4 @@
+const SCREENW = 720;
+const SCREENH = SCREENW;
+
+const BACKGROUND = 255;
