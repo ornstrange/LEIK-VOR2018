@@ -1,1 +1,3 @@
-import { Per } from './config.js'
+import {
+  Per
+} from './config.js'
